@@ -32,4 +32,21 @@ class BookSearchController {
                 .map(Document::getText)
                 .toList();
     }
+
+    @PostMapping("/enhanced-search")
+    String enhancedSearch(@RequestBody String query) {
+        String context = vectorStore.similaritySearch(SearchRequest.builder()
+                        .query(query)
+                        .topK(3)
+                        .build())
+                .stream()
+                .map(Document::getText)
+                .reduce("", (a, b) -> a + b + "\n");
+
+        return chatClient.prompt()
+                .system(context)
+                .user(query)
+                .call()
+                .content();
+    }
 }
